@@ -212,7 +212,7 @@
 
     /* Word Guess Form UI */
     .guess-form { display: flex; gap: 8px; margin-bottom: 12px; }
-    .guess-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .guess-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
     /* End Screen Custom Layout */
     .end-screen-content { text-align: center; padding: 1.5rem 0; }
@@ -227,6 +227,7 @@
       .game-btns { grid-template-columns: 1fr; }
       .choices, .match-grid { grid-template-columns: 1fr; }
       .input-row { grid-template-columns: 1fr; }
+      .guess-actions { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -354,6 +355,9 @@
         <button class="btn" id="btn-guess-hint" onclick="revealRandomLetter()">
           <i class="ti ti-bulb" aria-hidden="true"></i> Harf İste
         </button>
+        <button class="btn danger-btn" id="btn-guess-giveup" onclick="giveUpAndShowAnswer()">
+          Doğru Cevabı Gör
+        </button>
         <button class="btn primary" id="btn-guess-submit" onclick="checkGuess()">
           Kontrol Et
         </button>
@@ -393,7 +397,6 @@
   let activeGuessWords = [];
   let totalGameQuestions = 0;
 
-  // Harf tahmin modu durum değişkenleri
   let currentRevealedArray = []; 
 
   updateScore();
@@ -461,6 +464,7 @@
 
   function shuffle(a) { return [...a].sort(() => Math.random() - .5); }
 
+  // Geri dönüş butonu
   function goBack() {
     document.getElementById('main-screen').style.display = '';
     document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
@@ -691,6 +695,9 @@
         <button class="btn" id="btn-guess-hint" onclick="revealRandomLetter()">
           <i class="ti ti-bulb" aria-hidden="true"></i> Harf İste
         </button>
+        <button class="btn danger-btn" id="btn-guess-giveup" onclick="giveUpAndShowAnswer()">
+          Doğru Cevabı Gör
+        </button>
         <button class="btn primary" id="btn-guess-submit" onclick="checkGuess()">
           Kontrol Et
         </button>
@@ -702,7 +709,6 @@
       </div>
     `;
     
-    // Enter tuşuna basıldığında kontrol etme işlevini bağla
     document.getElementById('inp-guess-answer').addEventListener('keydown', e => {
       if (e.key === 'Enter' && !document.getElementById('inp-guess-answer').disabled) {
         checkGuess();
@@ -716,11 +722,12 @@
       return;
     }
     
-    // Arayüzü eski rengine ve ayarlarına geri döndür
+    // Arayüzü sıfırla
     document.getElementById('guess-clue-display').style.color = 'var(--green-text)';
     document.getElementById('inp-guess-answer').value = '';
     document.getElementById('inp-guess-answer').disabled = false;
     document.getElementById('btn-guess-hint').disabled = false;
+    document.getElementById('btn-guess-giveup').disabled = false;
     document.getElementById('btn-guess-submit').disabled = false;
     document.getElementById('guess-next').style.display = 'none';
 
@@ -730,13 +737,12 @@
     guessQ = activeGuessWords.pop();
     document.getElementById('guess-word-en').textContent = guessQ.en;
 
-    // Türkçe anlam dizisi oluştur (Boşlukları korur, harfleri alt çizgi yapar)
     currentRevealedArray = [];
     for (let i = 0; i < guessQ.tr.length; i++) {
       if (guessQ.tr[i] === ' ') {
         currentRevealedArray.push(' ');
       } else if (i === 0) {
-        currentRevealedArray.push(guessQ.tr[0]); // Sadece ilk harfi aç
+        currentRevealedArray.push(guessQ.tr[0]); 
       } else {
         currentRevealedArray.push('_');
       }
@@ -750,13 +756,11 @@
   }
 
   function revealRandomLetter() {
-    // Henüz açılmamış (yani hala '_') olan indeksleri topla
     let hiddenIndices = [];
     for (let i = 0; i < currentRevealedArray.length; i++) {
       if (currentRevealedArray[i] === '_') hiddenIndices.push(i);
     }
     
-    // Eğer açılacak harf kaldıysa birini rastgele aç
     if (hiddenIndices.length > 0) {
       let randIdx = hiddenIndices[Math.floor(Math.random() * hiddenIndices.length)];
       currentRevealedArray[randIdx] = guessQ.tr[randIdx];
@@ -770,23 +774,47 @@
     
     if (!userAns) { showAlert('Lütfen bir tahmin yazın!'); return; }
 
-    document.getElementById('inp-guess-answer').disabled = true;
-    document.getElementById('btn-guess-hint').disabled = true;
-    document.getElementById('btn-guess-submit').disabled = true;
-
-    // Tamamen doğruysa veya harf durumuna göre eşleşiyorsa
+    // DOĞRU CEVAP DURUMU
     if (userAns === targetAns) {
       scoreCorrect++;
+      updateScore();
+      
       document.getElementById('guess-clue-display').style.color = 'var(--green)';
-      // Tüm kelimeyi tam olarak göster
       document.getElementById('guess-clue-display').textContent = guessQ.tr;
-    } else {
-      scoreWrong++;
+      
+      // Formu kilitle ve sonraki soru butonunu göster
+      document.getElementById('inp-guess-answer').disabled = true;
+      document.getElementById('btn-guess-hint').disabled = true;
+      document.getElementById('btn-guess-giveup').disabled = true;
+      document.getElementById('btn-guess-submit').disabled = true;
+      document.getElementById('guess-next').style.display = '';
+      document.getElementById('guess-next').focus();
+    } 
+    // YANLIŞ CEVAP DURUMU (İlerlemeyi engeller, tekrar yazdırmak için ekranı sıfırlar)
+    else {
+      showAlert('❌ Yanlış Cevap! Tekrar deneyin.');
       document.getElementById('guess-clue-display').style.color = 'var(--red-text)';
-      document.getElementById('guess-clue-display').textContent = `Yanlış! Doğrusu: ${guessQ.tr}`;
+      
+      // Kullanıcının yazdığı alanı temizle ve odağı orada tut ki tekrar yazabilsin
+      document.getElementById('inp-guess-answer').value = '';
+      document.getElementById('inp-guess-answer').focus();
     }
+  }
 
+  // PES ETME: "DOĞRU CEVABI GÖR" BUTONU MANTIĞI
+  function giveUpAndShowAnswer() {
+    scoreWrong++;
     updateScore();
+
+    document.getElementById('guess-clue-display').style.color = 'var(--red-text)';
+    document.getElementById('guess-clue-display').textContent = `Doğru Cevap: ${guessQ.tr}`;
+
+    // Girişleri kapat, sonraki soruyu aç
+    document.getElementById('inp-guess-answer').disabled = true;
+    document.getElementById('btn-guess-hint').disabled = true;
+    document.getElementById('btn-guess-giveup').disabled = true;
+    document.getElementById('btn-guess-submit').disabled = true;
+    
     document.getElementById('guess-next').style.display = '';
     document.getElementById('guess-next').focus();
   }
@@ -806,7 +834,7 @@
     `;
   }
 
-  /* ── Klavye Kısayolları (Giriş Ekranı İçin) ── */
+  /* ── Klavye Kısayolları (Giriş Ekranı) ── */
   document.getElementById('inp-en').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('inp-tr').focus(); });
   document.getElementById('inp-tr').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('inp-sentence').focus(); });
   document.getElementById('inp-sentence').addEventListener('keydown', e => { if (e.key === 'Enter') addWord(); });
