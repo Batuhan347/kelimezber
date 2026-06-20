@@ -26,6 +26,8 @@
       --green-border: rgba(99,153,34,0.3);
       --warn-bg: #faeeda;
       --warn-text: #854f0b;
+      --info-bg: #e0f2fe;
+      --info-text: #0369a1;
       --radius: 8px;
       --radius-lg: 12px;
     }
@@ -153,6 +155,19 @@
     .question-en { font-size: 24px; font-weight: 500; margin-bottom: 4px; }
     .question-sub { font-size: 13px; color: var(--text2); }
 
+    /* Hint section post-answer */
+    .post-answer-hint {
+      margin-top: 12px;
+      padding: 8px 12px;
+      font-size: 14px;
+      background: var(--info-bg);
+      color: var(--info-text);
+      border-radius: var(--radius);
+      font-weight: 500;
+      display: none;
+    }
+    .post-answer-hint.show { display: block; }
+
     /* Choice buttons */
     .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .choice-btn {
@@ -190,6 +205,11 @@
       border-bottom: 2px solid var(--text2); vertical-align: middle;
     }
 
+    /* End Screen Custom Layout */
+    .end-screen-content { text-align: center; padding: 1.5rem 0; }
+    .end-screen-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--green-text); }
+    .end-screen-text { font-size: 14px; color: var(--text2); margin-bottom: 1.5rem; }
+
     /* Misc */
     .progress { font-size: 13px; color: var(--text3); text-align: right; margin-bottom: .75rem; }
     .next-btn-wrap { margin-top: 1rem; }
@@ -217,6 +237,7 @@
 
   <div id="alert-box" class="alert" role="alert"></div>
 
+  <!-- ── MAIN SCREEN ── -->
   <div id="main-screen">
     <div class="section">
       <div class="section-title"><i class="ti ti-plus" aria-hidden="true"></i> Kelime Ekle</div>
@@ -246,6 +267,7 @@
     </div>
   </div>
 
+  <!-- ── MATCH SCREEN ── -->
   <div id="match-screen" class="game-screen" aria-label="Eşleştirme Oyunu">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
     <div class="section">
@@ -264,41 +286,47 @@
     </div>
   </div>
 
+  <!-- ── QUIZ SCREEN ── -->
   <div id="quiz-screen" class="game-screen" aria-label="Çoktan Seçmeli Oyunu">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
-    <div class="section">
+    <div class="section" id="quiz-body">
       <div class="section-title"><i class="ti ti-list-check" aria-hidden="true"></i> Çoktan Seçmeli</div>
+      <p class="progress" id="quiz-progress"></p>
       <div class="question-card">
         <div class="question-en" id="quiz-word"></div>
         <div class="question-sub">Bu kelimenin Türkçe anlamı nedir?</div>
       </div>
       <div class="choices" id="quiz-choices"></div>
       <div class="next-btn-wrap">
-        <button class="btn" id="quiz-next" onclick="nextQuiz()" style="display:none">
+        <button class="btn" id="quiz-next" onclick="nextQuiz()">
           <i class="ti ti-arrow-right" aria-hidden="true"></i> Sonraki Soru
         </button>
       </div>
     </div>
   </div>
 
+  <!-- ── FILL SCREEN ── -->
   <div id="fill-screen" class="game-screen" aria-label="Boşluk Doldurma Oyunu">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
-    <div class="section">
+    <div class="section" id="fill-body">
       <div class="section-title"><i class="ti ti-pencil" aria-hidden="true"></i> Boşluk Doldurma</div>
+      <p class="progress" id="fill-progress"></p>
       <div class="question-card">
         <div class="fill-sentence" id="fill-sentence"></div>
-        <div class="question-sub"  id="fill-hint"></div>
+        <div class="post-answer-hint" id="fill-hint"></div>
       </div>
       <div class="choices" id="fill-choices"></div>
       <div class="next-btn-wrap">
-        <button class="btn" id="fill-next" onclick="nextFill()" style="display:none">
+        <button class="btn" id="fill-next" onclick="nextFill()">
           <i class="ti ti-arrow-right" aria-hidden="true"></i> Sonraki Soru
         </button>
       </div>
     </div>
   </div>
 
-</div><script>
+</div><!-- /app -->
+
+<script>
   const SENTENCES = [
     w => `I need to ${w} my homework before dinner.`,
     w => `She decided to ${w} the old books.`,
@@ -312,15 +340,18 @@
     w => `They want to ${w} a new project.`,
   ];
 
-  // Tarayıcı hafızasından kelimeleri ve skorları yükle
   let words = JSON.parse(localStorage.getItem('myFlashcards')) || [];
   let scoreCorrect = parseInt(localStorage.getItem('scoreCorrect')) || 0;
   let scoreWrong = parseInt(localStorage.getItem('scoreWrong')) || 0;
 
   let matchEnSel = null, matchTrSel = null, matchPairs = [];
   let quizQ = null, fillQ = null;
+  
+  // Soru havuzu takibi için aktif oyun listeleri
+  let activeQuizWords = [];
+  let activeFillWords = [];
+  let totalGameQuestions = 0;
 
-  // Sayfa yüklenince skor tablosunu güncelle
   updateScore();
 
   function showAlert(msg) {
@@ -334,7 +365,6 @@
   function updateScore() {
     document.getElementById('score-correct').textContent = scoreCorrect;
     document.getElementById('score-wrong').textContent = scoreWrong;
-    // Skorları hafızaya kaydet
     localStorage.setItem('scoreCorrect', scoreCorrect);
     localStorage.setItem('scoreWrong', scoreWrong);
   }
@@ -347,7 +377,6 @@
       showAlert('Bu kelime zaten listede var!'); return;
     }
     words.push({ en, tr });
-    // Kelimeleri hafızaya kaydet
     localStorage.setItem('myFlashcards', JSON.stringify(words));
     
     document.getElementById('inp-en').value = '';
@@ -358,7 +387,6 @@
 
   function deleteWord(i) {
     words.splice(i, 1);
-    // Güncel listeyi hafızaya kaydet
     localStorage.setItem('myFlashcards', JSON.stringify(words));
     renderWordList();
   }
@@ -394,9 +422,10 @@
     if (words.length < 4) { showAlert('Lütfen önce en az 4 kelime ekleyin!'); return; }
     document.getElementById('main-screen').style.display = 'none';
     document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
+    
     if (mode === 'match') initMatch();
-    if (mode === 'quiz')  initQuiz();
-    if (mode === 'fill')  initFill();
+    if (mode === 'quiz')  { initQuiz(); }
+    if (mode === 'fill')  { initFill(); }
   }
 
   /* ── MATCH ── */
@@ -451,13 +480,44 @@
   /* ── QUIZ ── */
   function initQuiz() {
     document.getElementById('quiz-screen').classList.add('active');
+    activeQuizWords = shuffle(words); // Kelimeleri klonla ve karıştır
+    totalGameQuestions = words.length;
+    resetQuizUI();
     nextQuiz();
   }
 
+  function resetQuizUI() {
+    document.getElementById('quiz-body').innerHTML = `
+      <div class="section-title"><i class="ti ti-list-check" aria-hidden="true"></i> Çoktan Seçmeli</div>
+      <p class="progress" id="quiz-progress"></p>
+      <div class="question-card">
+        <div class="question-en" id="quiz-word"></div>
+        <div class="question-sub">Bu kelimenin Türkçe anlamı nedir?</div>
+      </div>
+      <div class="choices" id="quiz-choices"></div>
+      <div class="next-btn-wrap">
+        <button class="btn" id="quiz-next" onclick="nextQuiz()">
+          <i class="ti ti-arrow-right" aria-hidden="true"></i> Sonraki Soru
+        </button>
+      </div>
+    `;
+  }
+
   function nextQuiz() {
+    if (activeQuizWords.length === 0) {
+      showEndScreen('quiz-body', 'initQuiz()');
+      return;
+    }
     document.getElementById('quiz-next').style.display = 'none';
-    quizQ = words[Math.floor(Math.random() * words.length)];
+    
+    // İlerlemeyi yazdır (Örn: 2 / 10)
+    const currentNum = totalGameQuestions - activeQuizWords.length + 1;
+    document.getElementById('quiz-progress').textContent = `${currentNum} / ${totalGameQuestions}`;
+
+    // Dizinin sonundan kelimeyi çek ve havuzdan eksilt
+    quizQ = activeQuizWords.pop();
     document.getElementById('quiz-word').textContent = quizQ.en;
+    
     const wrong = shuffle(words.filter(w => w.en !== quizQ.en)).slice(0, 3);
     const opts = shuffle([quizQ, ...wrong]);
     document.getElementById('quiz-choices').innerHTML = opts.map(o =>
@@ -482,17 +542,52 @@
   /* ── FILL ── */
   function initFill() {
     document.getElementById('fill-screen').classList.add('active');
+    activeFillWords = shuffle(words); // Kelimeleri klonla ve karıştır
+    totalGameQuestions = words.length;
+    resetFillUI();
     nextFill();
   }
 
+  function resetFillUI() {
+    document.getElementById('fill-body').innerHTML = `
+      <div class="section-title"><i class="ti ti-pencil" aria-hidden="true"></i> Boşluk Doldurma</div>
+      <p class="progress" id="fill-progress"></p>
+      <div class="question-card">
+        <div class="fill-sentence" id="fill-sentence"></div>
+        <div class="post-answer-hint" id="fill-hint"></div>
+      </div>
+      <div class="choices" id="fill-choices"></div>
+      <div class="next-btn-wrap">
+        <button class="btn" id="fill-next" onclick="nextFill()">
+          <i class="ti ti-arrow-right" aria-hidden="true"></i> Sonraki Soru
+        </button>
+      </div>
+    `;
+  }
+
   function nextFill() {
+    if (activeFillWords.length === 0) {
+      showEndScreen('fill-body', 'initFill()');
+      return;
+    }
     document.getElementById('fill-next').style.display = 'none';
-    fillQ = words[Math.floor(Math.random() * words.length)];
+    
+    const hintEl = document.getElementById('fill-hint');
+    hintEl.classList.remove('show');
+    hintEl.textContent = '';
+
+    // İlerlemeyi yazdır
+    const currentNum = totalGameQuestions - activeFillWords.length + 1;
+    document.getElementById('fill-progress').textContent = `${currentNum} / ${totalGameQuestions}`;
+
+    // Kelimeyi çek ve havuzdan çıkar
+    fillQ = activeFillWords.pop();
+    
     const tpl = SENTENCES[Math.floor(Math.random() * SENTENCES.length)];
     const sent = tpl(fillQ.en);
     const display = sent.replace(fillQ.en, '<span class="blank"></span>');
     document.getElementById('fill-sentence').innerHTML = display;
-    document.getElementById('fill-hint').textContent = `Türkçe anlamı: ${fillQ.tr}`;
+    
     const wrong = shuffle(words.filter(w => w.en !== fillQ.en)).slice(0, 3);
     const opts = shuffle([fillQ, ...wrong]);
     document.getElementById('fill-choices').innerHTML = opts.map(o =>
@@ -502,6 +597,11 @@
 
   function checkFill(btn, en) {
     document.querySelectorAll('#fill-choices .choice-btn').forEach(b => b.disabled = true);
+    const hintEl = document.getElementById('fill-hint');
+    
+    hintEl.textContent = `💡 Kelimenin Anlamı: ${fillQ.tr}`;
+    hintEl.classList.add('show');
+
     if (en === fillQ.en) {
       scoreCorrect++; btn.classList.add('correct-ans');
     } else {
@@ -514,11 +614,25 @@
     document.getElementById('fill-next').style.display = '';
   }
 
-  /* ── Keyboard shortcuts ── */
+  /* ── BİTİŞ EKRANI (YENİDEN OYNA) ── */
+  function showEndScreen(containerId, retryFunction) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = `
+      <div class="end-screen-content">
+        <i class="ti ti-trophy" style="font-size: 48px; color: #eab308; margin-bottom: 12px; display: inline-block;"></i>
+        <div class="end-screen-title">Tebrikler!</div>
+        <p class="end-screen-text">Listedeki tüm kelimeleri başarıyla tamamladınız.</p>
+        <button class="btn primary" onclick="${retryFunction}">
+          <i class="ti ti-refresh" aria-hidden="true"></i> Yeniden Oyna
+        </button>
+      </div>
+    `;
+  }
+
+  /* ── Klavye Kısayolları ── */
   document.getElementById('inp-en').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('inp-tr').focus(); });
   document.getElementById('inp-tr').addEventListener('keydown', e => { if (e.key === 'Enter') addWord(); });
 
-  // İlk yüklemede listeyi göster
   renderWordList();
 </script>
 </body>
