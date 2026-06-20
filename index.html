@@ -95,6 +95,7 @@
 
     /* Inputs */
     .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .full-input-row { margin-bottom: 8px; }
     input[type=text] {
       width: 100%; padding: 9px 12px; font-size: 14px;
       border: 0.5px solid var(--border2); border-radius: var(--radius);
@@ -121,7 +122,7 @@
     .btn:disabled { opacity: .4; cursor: not-allowed; }
 
     /* Game selector */
-    .game-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .game-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
     /* Word list */
     .word-list { margin-top: 1rem; display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
@@ -133,6 +134,7 @@
     .word-item .en { font-weight: 500; font-size: 14px; }
     .word-item .sep { color: var(--text3); margin: 0 6px; }
     .word-item .tr-text { font-size: 14px; color: var(--text2); }
+    .word-item .sentence-preview { font-size: 12px; color: var(--text3); display: block; margin-top: 2px; font-style: italic; }
     .word-item .del-btn { padding: 4px 8px; width: auto; font-size: 13px; }
     .empty-hint { font-size: 13px; color: var(--text3); text-align: center; padding: 1rem 0; }
 
@@ -154,6 +156,9 @@
     }
     .question-en { font-size: 24px; font-weight: 500; margin-bottom: 4px; }
     .question-sub { font-size: 13px; color: var(--text2); }
+
+    /* Word Guesser Layout Clues */
+    .guess-word-clue { font-size: 26px; font-weight: 600; letter-spacing: 0.25em; color: var(--green-text); margin: 12px 0; font-family: monospace; }
 
     /* Hint section post-answer */
     .post-answer-hint {
@@ -205,6 +210,10 @@
       border-bottom: 2px solid var(--text2); vertical-align: middle;
     }
 
+    /* Word Guess Form UI */
+    .guess-form { display: flex; gap: 8px; margin-bottom: 12px; }
+    .guess-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
     /* End Screen Custom Layout */
     .end-screen-content { text-align: center; padding: 1.5rem 0; }
     .end-screen-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--green-text); }
@@ -237,13 +246,15 @@
 
   <div id="alert-box" class="alert" role="alert"></div>
 
-  <!-- ── MAIN SCREEN ── -->
   <div id="main-screen">
     <div class="section">
       <div class="section-title"><i class="ti ti-plus" aria-hidden="true"></i> Kelime Ekle</div>
       <div class="input-row">
         <input type="text" id="inp-en" placeholder="İngilizce kelime..." aria-label="İngilizce kelime" />
         <input type="text" id="inp-tr" placeholder="Türkçe anlamı..."   aria-label="Türkçe anlam" />
+      </div>
+      <div class="full-input-row">
+        <input type="text" id="inp-sentence" placeholder="Örnek İngilizce cümle (İsteğe bağlı - Boşluk doldurma için)..." aria-label="Örnek Cümle" />
       </div>
       <button class="btn primary" onclick="addWord()">
         <i class="ti ti-plus" aria-hidden="true"></i> Kelime Ekle
@@ -253,7 +264,7 @@
 
     <div class="section">
       <div class="section-title"><i class="ti ti-gamepad-2" aria-hidden="true"></i> Oyun Seç</div>
-      <div class="game-btns">
+      <div class="game-btns" style="grid-template-columns: 1fr 1fr;">
         <button class="btn" onclick="startGame('match')">
           <i class="ti ti-arrows-shuffle" aria-hidden="true"></i> Eşleştirme
         </button>
@@ -263,11 +274,13 @@
         <button class="btn" onclick="startGame('fill')">
           <i class="ti ti-pencil" aria-hidden="true"></i> Boşluk Doldurma
         </button>
+        <button class="btn" onclick="startGame('guess')">
+          <i class="ti ti-abc" aria-hidden="true"></i> Harf Tahmin
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- ── MATCH SCREEN ── -->
   <div id="match-screen" class="game-screen" aria-label="Eşleştirme Oyunu">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
     <div class="section">
@@ -286,7 +299,6 @@
     </div>
   </div>
 
-  <!-- ── QUIZ SCREEN ── -->
   <div id="quiz-screen" class="game-screen" aria-label="Çoktan Seçmeli Oyunu">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
     <div class="section" id="quiz-body">
@@ -305,7 +317,6 @@
     </div>
   </div>
 
-  <!-- ── FILL SCREEN ── -->
   <div id="fill-screen" class="game-screen" aria-label="Boşluk Doldurma Oyunu">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
     <div class="section" id="fill-body">
@@ -324,10 +335,40 @@
     </div>
   </div>
 
-</div><!-- /app -->
+  <div id="guess-screen" class="game-screen" aria-label="Harf Tahmin Oyunu">
+    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
+    <div class="section" id="guess-body">
+      <div class="section-title"><i class="ti ti-abc" aria-hidden="true"></i> Harf Tahmin Oyunu</div>
+      <p class="progress" id="guess-progress"></p>
+      <div class="question-card">
+        <div class="question-en" id="guess-word-en"></div>
+        <div class="question-sub">Kelimesinin Türkçe karşılığını doldurun:</div>
+        <div class="guess-word-clue" id="guess-clue-display"></div>
+      </div>
+      
+      <div class="guess-form">
+        <input type="text" id="inp-guess-answer" placeholder="Türkçe anlamını yazın..." aria-label="Tahmininiz" autocomplete="off" />
+      </div>
+      
+      <div class="guess-actions">
+        <button class="btn" id="btn-guess-hint" onclick="revealRandomLetter()">
+          <i class="ti ti-bulb" aria-hidden="true"></i> Harf İste
+        </button>
+        <button class="btn primary" id="btn-guess-submit" onclick="checkGuess()">
+          Kontrol Et
+        </button>
+      </div>
 
-<script>
-  const SENTENCES = [
+      <div class="next-btn-wrap">
+        <button class="btn" id="guess-next" onclick="nextGuess()" style="display:none">
+          <i class="ti ti-arrow-right" aria-hidden="true"></i> Sonraki Soru
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><script>
+  const BACKUP_SENTENCES = [
     w => `I need to ${w} my homework before dinner.`,
     w => `She decided to ${w} the old books.`,
     w => `They always ${w} together on weekends.`,
@@ -345,12 +386,15 @@
   let scoreWrong = parseInt(localStorage.getItem('scoreWrong')) || 0;
 
   let matchEnSel = null, matchTrSel = null, matchPairs = [];
-  let quizQ = null, fillQ = null;
+  let quizQ = null, fillQ = null, guessQ = null;
   
-  // Soru havuzu takibi için aktif oyun listeleri
   let activeQuizWords = [];
   let activeFillWords = [];
+  let activeGuessWords = [];
   let totalGameQuestions = 0;
+
+  // Harf tahmin modu durum değişkenleri
+  let currentRevealedArray = []; 
 
   updateScore();
 
@@ -372,15 +416,19 @@
   function addWord() {
     const en = document.getElementById('inp-en').value.trim();
     const tr = document.getElementById('inp-tr').value.trim();
+    const customSentence = document.getElementById('inp-sentence').value.trim();
+
     if (!en || !tr) { showAlert('Lütfen her iki alanı da doldurun.'); return; }
     if (words.find(w => w.en.toLowerCase() === en.toLowerCase())) {
       showAlert('Bu kelime zaten listede var!'); return;
     }
-    words.push({ en, tr });
+    
+    words.push({ en, tr, sentence: customSentence || null });
     localStorage.setItem('myFlashcards', JSON.stringify(words));
     
     document.getElementById('inp-en').value = '';
     document.getElementById('inp-tr').value = '';
+    document.getElementById('inp-sentence').value = '';
     document.getElementById('inp-en').focus();
     renderWordList();
   }
@@ -403,6 +451,7 @@
           <span class="en">${w.en}</span>
           <span class="sep">→</span>
           <span class="tr-text">${w.tr}</span>
+          ${w.sentence ? `<span class="sentence-preview">📝 ${w.sentence}</span>` : ''}
         </span>
         <button class="btn danger-btn del-btn" onclick="deleteWord(${i})" aria-label="${w.en} kelimesini sil">
           <i class="ti ti-trash" aria-hidden="true"></i>
@@ -424,8 +473,9 @@
     document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
     
     if (mode === 'match') initMatch();
-    if (mode === 'quiz')  { initQuiz(); }
-    if (mode === 'fill')  { initFill(); }
+    if (mode === 'quiz')  initQuiz();
+    if (mode === 'fill')  initFill();
+    if (mode === 'guess') initGuess();
   }
 
   /* ── MATCH ── */
@@ -480,7 +530,7 @@
   /* ── QUIZ ── */
   function initQuiz() {
     document.getElementById('quiz-screen').classList.add('active');
-    activeQuizWords = shuffle(words); // Kelimeleri klonla ve karıştır
+    activeQuizWords = shuffle(words);
     totalGameQuestions = words.length;
     resetQuizUI();
     nextQuiz();
@@ -509,12 +559,9 @@
       return;
     }
     document.getElementById('quiz-next').style.display = 'none';
-    
-    // İlerlemeyi yazdır (Örn: 2 / 10)
     const currentNum = totalGameQuestions - activeQuizWords.length + 1;
     document.getElementById('quiz-progress').textContent = `${currentNum} / ${totalGameQuestions}`;
 
-    // Dizinin sonundan kelimeyi çek ve havuzdan eksilt
     quizQ = activeQuizWords.pop();
     document.getElementById('quiz-word').textContent = quizQ.en;
     
@@ -542,7 +589,7 @@
   /* ── FILL ── */
   function initFill() {
     document.getElementById('fill-screen').classList.add('active');
-    activeFillWords = shuffle(words); // Kelimeleri klonla ve karıştır
+    activeFillWords = shuffle(words);
     totalGameQuestions = words.length;
     resetFillUI();
     nextFill();
@@ -576,16 +623,21 @@
     hintEl.classList.remove('show');
     hintEl.textContent = '';
 
-    // İlerlemeyi yazdır
     const currentNum = totalGameQuestions - activeFillWords.length + 1;
     document.getElementById('fill-progress').textContent = `${currentNum} / ${totalGameQuestions}`;
 
-    // Kelimeyi çek ve havuzdan çıkar
     fillQ = activeFillWords.pop();
     
-    const tpl = SENTENCES[Math.floor(Math.random() * SENTENCES.length)];
-    const sent = tpl(fillQ.en);
-    const display = sent.replace(fillQ.en, '<span class="blank"></span>');
+    let rawSentence = "";
+    if (fillQ.sentence && fillQ.sentence.toLowerCase().includes(fillQ.en.toLowerCase())) {
+      rawSentence = fillQ.sentence;
+    } else {
+      const tpl = BACKUP_SENTENCES[Math.floor(Math.random() * BACKUP_SENTENCES.length)];
+      rawSentence = tpl(fillQ.en);
+    }
+
+    const regex = new RegExp(`\\b${fillQ.en}\\b`, 'gi');
+    const display = rawSentence.replace(regex, '<span class="blank"></span>');
     document.getElementById('fill-sentence').innerHTML = display;
     
     const wrong = shuffle(words.filter(w => w.en !== fillQ.en)).slice(0, 3);
@@ -614,7 +666,132 @@
     document.getElementById('fill-next').style.display = '';
   }
 
-  /* ── BİTİŞ EKRANI (YENİDEN OYNA) ── */
+  /* ── HARF TAHMİN (GUESS) ── */
+  function initGuess() {
+    document.getElementById('guess-screen').classList.add('active');
+    activeGuessWords = shuffle(words);
+    totalGameQuestions = words.length;
+    resetGuessUI();
+    nextGuess();
+  }
+
+  function resetGuessUI() {
+    document.getElementById('guess-body').innerHTML = `
+      <div class="section-title"><i class="ti ti-abc" aria-hidden="true"></i> Harf Tahmin Oyunu</div>
+      <p class="progress" id="guess-progress"></p>
+      <div class="question-card">
+        <div class="question-en" id="guess-word-en"></div>
+        <div class="question-sub">Kelimesinin Türkçe karşılığını doldurun:</div>
+        <div class="guess-word-clue" id="guess-clue-display"></div>
+      </div>
+      <div class="guess-form">
+        <input type="text" id="inp-guess-answer" placeholder="Türkçe anlamını yazın..." aria-label="Tahmininiz" autocomplete="off" />
+      </div>
+      <div class="guess-actions">
+        <button class="btn" id="btn-guess-hint" onclick="revealRandomLetter()">
+          <i class="ti ti-bulb" aria-hidden="true"></i> Harf İste
+        </button>
+        <button class="btn primary" id="btn-guess-submit" onclick="checkGuess()">
+          Kontrol Et
+        </button>
+      </div>
+      <div class="next-btn-wrap">
+        <button class="btn" id="guess-next" onclick="nextGuess()" style="display:none">
+          <i class="ti ti-arrow-right" aria-hidden="true"></i> Sonraki Soru
+        </button>
+      </div>
+    `;
+    
+    // Enter tuşuna basıldığında kontrol etme işlevini bağla
+    document.getElementById('inp-guess-answer').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !document.getElementById('inp-guess-answer').disabled) {
+        checkGuess();
+      }
+    });
+  }
+
+  function nextGuess() {
+    if (activeGuessWords.length === 0) {
+      showEndScreen('guess-body', 'initGuess()');
+      return;
+    }
+    
+    // Arayüzü eski rengine ve ayarlarına geri döndür
+    document.getElementById('guess-clue-display').style.color = 'var(--green-text)';
+    document.getElementById('inp-guess-answer').value = '';
+    document.getElementById('inp-guess-answer').disabled = false;
+    document.getElementById('btn-guess-hint').disabled = false;
+    document.getElementById('btn-guess-submit').disabled = false;
+    document.getElementById('guess-next').style.display = 'none';
+
+    const currentNum = totalGameQuestions - activeGuessWords.length + 1;
+    document.getElementById('guess-progress').textContent = `${currentNum} / ${totalGameQuestions}`;
+
+    guessQ = activeGuessWords.pop();
+    document.getElementById('guess-word-en').textContent = guessQ.en;
+
+    // Türkçe anlam dizisi oluştur (Boşlukları korur, harfleri alt çizgi yapar)
+    currentRevealedArray = [];
+    for (let i = 0; i < guessQ.tr.length; i++) {
+      if (guessQ.tr[i] === ' ') {
+        currentRevealedArray.push(' ');
+      } else if (i === 0) {
+        currentRevealedArray.push(guessQ.tr[0]); // Sadece ilk harfi aç
+      } else {
+        currentRevealedArray.push('_');
+      }
+    }
+    renderGuessClue();
+    document.getElementById('inp-guess-answer').focus();
+  }
+
+  function renderGuessClue() {
+    document.getElementById('guess-clue-display').textContent = currentRevealedArray.join(' ');
+  }
+
+  function revealRandomLetter() {
+    // Henüz açılmamış (yani hala '_') olan indeksleri topla
+    let hiddenIndices = [];
+    for (let i = 0; i < currentRevealedArray.length; i++) {
+      if (currentRevealedArray[i] === '_') hiddenIndices.push(i);
+    }
+    
+    // Eğer açılacak harf kaldıysa birini rastgele aç
+    if (hiddenIndices.length > 0) {
+      let randIdx = hiddenIndices[Math.floor(Math.random() * hiddenIndices.length)];
+      currentRevealedArray[randIdx] = guessQ.tr[randIdx];
+      renderGuessClue();
+    }
+  }
+
+  function checkGuess() {
+    const userAns = document.getElementById('inp-guess-answer').value.trim().toLowerCase();
+    const targetAns = guessQ.tr.trim().toLowerCase();
+    
+    if (!userAns) { showAlert('Lütfen bir tahmin yazın!'); return; }
+
+    document.getElementById('inp-guess-answer').disabled = true;
+    document.getElementById('btn-guess-hint').disabled = true;
+    document.getElementById('btn-guess-submit').disabled = true;
+
+    // Tamamen doğruysa veya harf durumuna göre eşleşiyorsa
+    if (userAns === targetAns) {
+      scoreCorrect++;
+      document.getElementById('guess-clue-display').style.color = 'var(--green)';
+      // Tüm kelimeyi tam olarak göster
+      document.getElementById('guess-clue-display').textContent = guessQ.tr;
+    } else {
+      scoreWrong++;
+      document.getElementById('guess-clue-display').style.color = 'var(--red-text)';
+      document.getElementById('guess-clue-display').textContent = `Yanlış! Doğrusu: ${guessQ.tr}`;
+    }
+
+    updateScore();
+    document.getElementById('guess-next').style.display = '';
+    document.getElementById('guess-next').focus();
+  }
+
+  /* ── BİTİŞ EKRANI ── */
   function showEndScreen(containerId, retryFunction) {
     const container = document.getElementById(containerId);
     container.innerHTML = `
@@ -629,9 +806,10 @@
     `;
   }
 
-  /* ── Klavye Kısayolları ── */
+  /* ── Klavye Kısayolları (Giriş Ekranı İçin) ── */
   document.getElementById('inp-en').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('inp-tr').focus(); });
-  document.getElementById('inp-tr').addEventListener('keydown', e => { if (e.key === 'Enter') addWord(); });
+  document.getElementById('inp-tr').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('inp-sentence').focus(); });
+  document.getElementById('inp-sentence').addEventListener('keydown', e => { if (e.key === 'Enter') addWord(); });
 
   renderWordList();
 </script>
