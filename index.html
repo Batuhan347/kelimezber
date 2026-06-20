@@ -177,7 +177,7 @@
     }
     .match-btn:hover:not(:disabled) { background: var(--surface2); }
     .match-btn.selected   { border-color: var(--green); background: var(--green-bg); color: var(--green-text); }
-    .match-btn.matched    { opacity: 0; pointer-events: none; transition: opacity .4s; }
+    .match-btn.matched     { opacity: 0; pointer-events: none; transition: opacity .4s; }
     .match-btn.wrong-flash { background: var(--red-bg); border-color: var(--red-border); color: var(--red-text); }
 
     /* Fill sentence */
@@ -217,7 +217,6 @@
 
   <div id="alert-box" class="alert" role="alert"></div>
 
-  <!-- ── MAIN SCREEN ── -->
   <div id="main-screen">
     <div class="section">
       <div class="section-title"><i class="ti ti-plus" aria-hidden="true"></i> Kelime Ekle</div>
@@ -247,7 +246,6 @@
     </div>
   </div>
 
-  <!-- ── MATCH SCREEN ── -->
   <div id="match-screen" class="game-screen" aria-label="Eşleştirme Oyunu">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
     <div class="section">
@@ -266,7 +264,6 @@
     </div>
   </div>
 
-  <!-- ── QUIZ SCREEN ── -->
   <div id="quiz-screen" class="game-screen" aria-label="Çoktan Seçmeli Oyunu">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
     <div class="section">
@@ -284,7 +281,6 @@
     </div>
   </div>
 
-  <!-- ── FILL SCREEN ── -->
   <div id="fill-screen" class="game-screen" aria-label="Boşluk Doldurma Oyunu">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
     <div class="section">
@@ -302,9 +298,7 @@
     </div>
   </div>
 
-</div><!-- /app -->
-
-<script>
+</div><script>
   const SENTENCES = [
     w => `I need to ${w} my homework before dinner.`,
     w => `She decided to ${w} the old books.`,
@@ -318,10 +312,16 @@
     w => `They want to ${w} a new project.`,
   ];
 
-  let words = [];
-  let scoreCorrect = 0, scoreWrong = 0;
+  // Tarayıcı hafızasından kelimeleri ve skorları yükle
+  let words = JSON.parse(localStorage.getItem('myFlashcards')) || [];
+  let scoreCorrect = parseInt(localStorage.getItem('scoreCorrect')) || 0;
+  let scoreWrong = parseInt(localStorage.getItem('scoreWrong')) || 0;
+
   let matchEnSel = null, matchTrSel = null, matchPairs = [];
   let quizQ = null, fillQ = null;
+
+  // Sayfa yüklenince skor tablosunu güncelle
+  updateScore();
 
   function showAlert(msg) {
     const a = document.getElementById('alert-box');
@@ -334,6 +334,9 @@
   function updateScore() {
     document.getElementById('score-correct').textContent = scoreCorrect;
     document.getElementById('score-wrong').textContent = scoreWrong;
+    // Skorları hafızaya kaydet
+    localStorage.setItem('scoreCorrect', scoreCorrect);
+    localStorage.setItem('scoreWrong', scoreWrong);
   }
 
   function addWord() {
@@ -344,6 +347,9 @@
       showAlert('Bu kelime zaten listede var!'); return;
     }
     words.push({ en, tr });
+    // Kelimeleri hafızaya kaydet
+    localStorage.setItem('myFlashcards', JSON.stringify(words));
+    
     document.getElementById('inp-en').value = '';
     document.getElementById('inp-tr').value = '';
     document.getElementById('inp-en').focus();
@@ -352,6 +358,8 @@
 
   function deleteWord(i) {
     words.splice(i, 1);
+    // Güncel listeyi hafızaya kaydet
+    localStorage.setItem('myFlashcards', JSON.stringify(words));
     renderWordList();
   }
 
@@ -510,6 +518,7 @@
   document.getElementById('inp-en').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('inp-tr').focus(); });
   document.getElementById('inp-tr').addEventListener('keydown', e => { if (e.key === 'Enter') addWord(); });
 
+  // İlk yüklemede listeyi göster
   renderWordList();
 </script>
 </body>
