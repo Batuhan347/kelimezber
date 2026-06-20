@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kelime Kartları — İngilizce Ezberleme</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f5f3;
+      --surface: #ffffff;
+      --surface2: #f0efed;
+      --border: rgba(0,0,0,0.10);
+      --border2: rgba(0,0,0,0.18);
+      --text: #1a1a18;
+      --text2: #5c5c58;
+      --text3: #9a9a95;
+      --green: #639922;
+      --green-bg: #eaf3de;
+      --green-text: #3b6d11;
+      --red-bg: #fce8e8;
+      --red-text: #a32d2d;
+      --red-border: rgba(163,45,45,0.3);
+      --green-border: rgba(99,153,34,0.3);
+      --warn-bg: #faeeda;
+      --warn-text: #854f0b;
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    .app { width: 100%; max-width: 620px; }
+
+    /* Score bar */
+    .score-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 12px 18px;
+      margin-bottom: 1.25rem;
+    }
+    .score-bar .brand { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .score-pills { display: flex; gap: 8px; }
+    .pill {
+      font-size: 13px; font-weight: 500;
+      padding: 4px 12px;
+      border-radius: var(--radius);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .pill.correct { background: var(--green-bg); color: var(--green-text); }
+    .pill.wrong   { background: var(--red-bg);   color: var(--red-text);   }
+
+    /* Alert */
+    .alert {
+      font-size: 13px; padding: 10px 14px;
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      display: none;
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      border: 0.5px solid rgba(133,79,11,0.25);
+    }
+    .alert.show { display: block; }
+
+    /* Card / Section */
+    .section {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-size: 12px; font-weight: 500; color: var(--text3);
+      text-transform: uppercase; letter-spacing: .06em;
+      margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* Inputs */
+    .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    input[type=text] {
+      width: 100%; padding: 9px 12px; font-size: 14px;
+      border: 0.5px solid var(--border2); border-radius: var(--radius);
+      background: var(--surface2); color: var(--text);
+      outline: none; transition: border-color .15s, box-shadow .15s;
+    }
+    input[type=text]::placeholder { color: var(--text3); }
+    input[type=text]:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(99,153,34,.15); }
+
+    /* Buttons */
+    .btn {
+      cursor: pointer; padding: 9px 16px; font-size: 14px; font-weight: 500;
+      border: 0.5px solid var(--border2); border-radius: var(--radius);
+      background: transparent; color: var(--text);
+      transition: all .15s; width: 100%;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn:hover { background: var(--surface2); }
+    .btn:active { transform: scale(.98); }
+    .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
+    .btn.primary:hover { background: var(--green-text); border-color: var(--green-text); }
+    .btn.danger-btn { border-color: var(--red-border); color: var(--red-text); }
+    .btn.danger-btn:hover { background: var(--red-bg); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* Game selector */
+    .game-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+    /* Word list */
+    .word-list { margin-top: 1rem; display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+    .word-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 12px; background: var(--surface2);
+      border-radius: var(--radius); border: 0.5px solid var(--border);
+    }
+    .word-item .en { font-weight: 500; font-size: 14px; }
+    .word-item .sep { color: var(--text3); margin: 0 6px; }
+    .word-item .tr-text { font-size: 14px; color: var(--text2); }
+    .word-item .del-btn { padding: 4px 8px; width: auto; font-size: 13px; }
+    .empty-hint { font-size: 13px; color: var(--text3); text-align: center; padding: 1rem 0; }
+
+    /* Game screens */
+    .game-screen { display: none; }
+    .game-screen.active { display: block; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--text2); cursor: pointer;
+      background: none; border: none; padding: 0; margin-bottom: 1rem;
+      transition: color .15s;
+    }
+    .back-btn:hover { color: var(--text); }
+
+    /* Question card */
+    .question-card {
+      background: var(--surface2); border-radius: var(--radius-lg);
+      padding: 1.5rem; margin-bottom: 1rem; text-align: center;
+    }
+    .question-en { font-size: 24px; font-weight: 500; margin-bottom: 4px; }
+    .question-sub { font-size: 13px; color: var(--text2); }
+
+    /* Choice buttons */
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .choice-btn {
+      padding: 11px 16px; font-size: 14px; text-align: center;
+      cursor: pointer; border: 0.5px solid var(--border2); border-radius: var(--radius);
+      background: transparent; color: var(--text);
+      transition: all .2s; width: 100%;
+    }
+    .choice-btn:hover:not(:disabled) { background: var(--surface2); }
+    .choice-btn:disabled { cursor: default; }
+    .choice-btn.correct-ans { background: var(--green-bg) !important; border-color: var(--green-border) !important; color: var(--green-text) !important; }
+    .choice-btn.wrong-ans   { background: var(--red-bg)   !important; border-color: var(--red-border)   !important; color: var(--red-text)   !important; }
+
+    /* Match grid */
+    .match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .match-col { display: flex; flex-direction: column; gap: 8px; }
+    .match-col-title { font-size: 12px; color: var(--text3); text-align: center; margin-bottom: 2px; }
+    .match-btn {
+      padding: 10px; font-size: 14px; text-align: center;
+      cursor: pointer; border: 0.5px solid var(--border2); border-radius: var(--radius);
+      background: transparent; color: var(--text); transition: all .2s; width: 100%;
+    }
+    .match-btn:hover:not(:disabled) { background: var(--surface2); }
+    .match-btn.selected   { border-color: var(--green); background: var(--green-bg); color: var(--green-text); }
+    .match-btn.matched    { opacity: 0; pointer-events: none; transition: opacity .4s; }
+    .match-btn.wrong-flash { background: var(--red-bg); border-color: var(--red-border); color: var(--red-text); }
+
+    /* Fill sentence */
+    .fill-sentence {
+      font-size: 17px; color: var(--text); line-height: 1.8;
+      text-align: center; padding: .75rem 0;
+    }
+    .blank {
+      display: inline-block; width: 80px;
+      border-bottom: 2px solid var(--text2); vertical-align: middle;
+    }
+
+    /* Misc */
+    .progress { font-size: 13px; color: var(--text3); text-align: right; margin-bottom: .75rem; }
+    .next-btn-wrap { margin-top: 1rem; }
+
+    @media (max-width: 480px) {
+      .game-btns { grid-template-columns: 1fr; }
+      .choices, .match-grid { grid-template-columns: 1fr; }
+      .input-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <div class="score-bar">
+    <span class="brand">
+      <i class="ti ti-brain" aria-hidden="true" style="font-size:20px"></i>
+      Kelime Kartları
+    </span>
+    <div class="score-pills">
+      <span class="pill correct"><i class="ti ti-check" aria-hidden="true"></i> <span id="score-correct">0</span></span>
+      <span class="pill wrong"><i class="ti ti-x" aria-hidden="true"></i> <span id="score-wrong">0</span></span>
+    </div>
+  </div>
+
+  <div id="alert-box" class="alert" role="alert"></div>
+
+  <!-- ── MAIN SCREEN ── -->
+  <div id="main-screen">
+    <div class="section">
+      <div class="section-title"><i class="ti ti-plus" aria-hidden="true"></i> Kelime Ekle</div>
+      <div class="input-row">
+        <input type="text" id="inp-en" placeholder="İngilizce kelime..." aria-label="İngilizce kelime" />
+        <input type="text" id="inp-tr" placeholder="Türkçe anlamı..."   aria-label="Türkçe anlam" />
+      </div>
+      <button class="btn primary" onclick="addWord()">
+        <i class="ti ti-plus" aria-hidden="true"></i> Kelime Ekle
+      </button>
+      <div id="word-list" class="word-list"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><i class="ti ti-gamepad-2" aria-hidden="true"></i> Oyun Seç</div>
+      <div class="game-btns">
+        <button class="btn" onclick="startGame('match')">
+          <i class="ti ti-arrows-shuffle" aria-hidden="true"></i> Eşleştirme
+        </button>
+        <button class="btn" onclick="startGame('quiz')">
+          <i class="ti ti-list-check" aria-hidden="true"></i> Çoktan Seçmeli
+        </button>
+        <button class="btn" onclick="startGame('fill')">
+          <i class="ti ti-pencil" aria-hidden="true"></i> Boşluk Doldurma
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MATCH SCREEN ── -->
+  <div id="match-screen" class="game-screen" aria-label="Eşleştirme Oyunu">
+    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
+    <div class="section">
+      <div class="section-title"><i class="ti ti-arrows-shuffle" aria-hidden="true"></i> Eşleştirme Oyunu</div>
+      <p class="progress" id="match-progress"></p>
+      <div class="match-grid">
+        <div class="match-col">
+          <div class="match-col-title">İngilizce</div>
+          <div id="match-en"></div>
+        </div>
+        <div class="match-col">
+          <div class="match-col-title">Türkçe</div>
+          <div id="match-tr"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── QUIZ SCREEN ── -->
+  <div id="quiz-screen" class="game-screen" aria-label="Çoktan Seçmeli Oyunu">
+    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
+    <div class="section">
+      <div class="section-title"><i class="ti ti-list-check" aria-hidden="true"></i> Çoktan Seçmeli</div>
+      <div class="question-card">
+        <div class="question-en" id="quiz-word"></div>
+        <div class="question-sub">Bu kelimenin Türkçe anlamı nedir?</div>
+      </div>
+      <div class="choices" id="quiz-choices"></div>
+      <div class="next-btn-wrap">
+        <button class="btn" id="quiz-next" onclick="nextQuiz()" style="display:none">
+          <i class="ti ti-arrow-right" aria-hidden="true"></i> Sonraki Soru
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FILL SCREEN ── -->
+  <div id="fill-screen" class="game-screen" aria-label="Boşluk Doldurma Oyunu">
+    <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
+    <div class="section">
+      <div class="section-title"><i class="ti ti-pencil" aria-hidden="true"></i> Boşluk Doldurma</div>
+      <div class="question-card">
+        <div class="fill-sentence" id="fill-sentence"></div>
+        <div class="question-sub"  id="fill-hint"></div>
+      </div>
+      <div class="choices" id="fill-choices"></div>
+      <div class="next-btn-wrap">
+        <button class="btn" id="fill-next" onclick="nextFill()" style="display:none">
+          <i class="ti ti-arrow-right" aria-hidden="true"></i> Sonraki Soru
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+  const SENTENCES = [
+    w => `I need to ${w} my homework before dinner.`,
+    w => `She decided to ${w} the old books.`,
+    w => `They always ${w} together on weekends.`,
+    w => `He tried to ${w} the problem quickly.`,
+    w => `We should ${w} more to stay healthy.`,
+    w => `Can you ${w} this task for me?`,
+    w => `It is important to ${w} every day.`,
+    w => `She loves to ${w} with her friends.`,
+    w => `You must ${w} before the deadline.`,
+    w => `They want to ${w} a new project.`,
+  ];
+
+  let words = [];
+  let scoreCorrect = 0, scoreWrong = 0;
+  let matchEnSel = null, matchTrSel = null, matchPairs = [];
+  let quizQ = null, fillQ = null;
+
+  function showAlert(msg) {
+    const a = document.getElementById('alert-box');
+    a.textContent = msg;
+    a.className = 'alert show';
+    clearTimeout(a._t);
+    a._t = setTimeout(() => { a.className = 'alert'; }, 3000);
+  }
+
+  function updateScore() {
+    document.getElementById('score-correct').textContent = scoreCorrect;
+    document.getElementById('score-wrong').textContent = scoreWrong;
+  }
+
+  function addWord() {
+    const en = document.getElementById('inp-en').value.trim();
+    const tr = document.getElementById('inp-tr').value.trim();
+    if (!en || !tr) { showAlert('Lütfen her iki alanı da doldurun.'); return; }
+    if (words.find(w => w.en.toLowerCase() === en.toLowerCase())) {
+      showAlert('Bu kelime zaten listede var!'); return;
+    }
+    words.push({ en, tr });
+    document.getElementById('inp-en').value = '';
+    document.getElementById('inp-tr').value = '';
+    document.getElementById('inp-en').focus();
+    renderWordList();
+  }
+
+  function deleteWord(i) {
+    words.splice(i, 1);
+    renderWordList();
+  }
+
+  function renderWordList() {
+    const el = document.getElementById('word-list');
+    if (words.length === 0) {
+      el.innerHTML = '<p class="empty-hint">Henüz kelime eklenmedi.</p>';
+      return;
+    }
+    el.innerHTML = words.map((w, i) => `
+      <div class="word-item">
+        <span>
+          <span class="en">${w.en}</span>
+          <span class="sep">→</span>
+          <span class="tr-text">${w.tr}</span>
+        </span>
+        <button class="btn danger-btn del-btn" onclick="deleteWord(${i})" aria-label="${w.en} kelimesini sil">
+          <i class="ti ti-trash" aria-hidden="true"></i>
+        </button>
+      </div>`).join('');
+  }
+
+  function shuffle(a) { return [...a].sort(() => Math.random() - .5); }
+
+  function goBack() {
+    document.getElementById('main-screen').style.display = '';
+    document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
+    matchEnSel = null; matchTrSel = null;
+  }
+
+  function startGame(mode) {
+    if (words.length < 4) { showAlert('Lütfen önce en az 4 kelime ekleyin!'); return; }
+    document.getElementById('main-screen').style.display = 'none';
+    document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
+    if (mode === 'match') initMatch();
+    if (mode === 'quiz')  initQuiz();
+    if (mode === 'fill')  initFill();
+  }
+
+  /* ── MATCH ── */
+  function initMatch() {
+    const screen = document.getElementById('match-screen');
+    screen.classList.add('active');
+    matchPairs = shuffle(words).slice(0, Math.min(6, words.length));
+    matchEnSel = null; matchTrSel = null;
+    const trShuffled = shuffle(matchPairs);
+    document.getElementById('match-progress').textContent = `${matchPairs.length} çift`;
+    document.getElementById('match-en').innerHTML = matchPairs.map((w, i) =>
+      `<button class="match-btn" data-idx="${i}" onclick="matchClick(this,'en',${i})">${w.en}</button>`
+    ).join('');
+    document.getElementById('match-tr').innerHTML = trShuffled.map(w =>
+      `<button class="match-btn" data-word="${w.en}" onclick="matchClick(this,'tr','${w.en}')">${w.tr}</button>`
+    ).join('');
+  }
+
+  function matchClick(btn, side, val) {
+    if (btn.disabled || btn.classList.contains('matched')) return;
+    if (side === 'en') {
+      document.querySelectorAll('#match-en .match-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      matchEnSel = { btn, idx: val };
+    } else {
+      document.querySelectorAll('#match-tr .match-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      matchTrSel = { btn, word: val };
+    }
+    if (!matchEnSel || !matchTrSel) return;
+    const correct = matchPairs[matchEnSel.idx].en === matchTrSel.word;
+    if (correct) {
+      scoreCorrect++; updateScore();
+      matchEnSel.btn.classList.add('matched');
+      matchTrSel.btn.classList.add('matched');
+      matchEnSel = null; matchTrSel = null;
+      const remaining = document.querySelectorAll('.match-btn:not(.matched)').length;
+      if (remaining === 0) setTimeout(() => { showAlert('🎉 Tüm çiftleri buldunuz! Tebrikler!'); initMatch(); }, 500);
+    } else {
+      scoreWrong++; updateScore();
+      matchEnSel.btn.classList.add('wrong-flash');
+      matchTrSel.btn.classList.add('wrong-flash');
+      const en = matchEnSel.btn, tr = matchTrSel.btn;
+      setTimeout(() => {
+        en.classList.remove('selected', 'wrong-flash');
+        tr.classList.remove('selected', 'wrong-flash');
+        matchEnSel = null; matchTrSel = null;
+      }, 700);
+    }
+  }
+
+  /* ── QUIZ ── */
+  function initQuiz() {
+    document.getElementById('quiz-screen').classList.add('active');
+    nextQuiz();
+  }
+
+  function nextQuiz() {
+    document.getElementById('quiz-next').style.display = 'none';
+    quizQ = words[Math.floor(Math.random() * words.length)];
+    document.getElementById('quiz-word').textContent = quizQ.en;
+    const wrong = shuffle(words.filter(w => w.en !== quizQ.en)).slice(0, 3);
+    const opts = shuffle([quizQ, ...wrong]);
+    document.getElementById('quiz-choices').innerHTML = opts.map(o =>
+      `<button class="choice-btn" onclick="checkQuiz(this,'${o.en}')">${o.tr}</button>`
+    ).join('');
+  }
+
+  function checkQuiz(btn, en) {
+    document.querySelectorAll('#quiz-choices .choice-btn').forEach(b => b.disabled = true);
+    if (en === quizQ.en) {
+      scoreCorrect++; btn.classList.add('correct-ans');
+    } else {
+      scoreWrong++; btn.classList.add('wrong-ans');
+      document.querySelectorAll('#quiz-choices .choice-btn').forEach(b => {
+        if (b.textContent === quizQ.tr) b.classList.add('correct-ans');
+      });
+    }
+    updateScore();
+    document.getElementById('quiz-next').style.display = '';
+  }
+
+  /* ── FILL ── */
+  function initFill() {
+    document.getElementById('fill-screen').classList.add('active');
+    nextFill();
+  }
+
+  function nextFill() {
+    document.getElementById('fill-next').style.display = 'none';
+    fillQ = words[Math.floor(Math.random() * words.length)];
+    const tpl = SENTENCES[Math.floor(Math.random() * SENTENCES.length)];
+    const sent = tpl(fillQ.en);
+    const display = sent.replace(fillQ.en, '<span class="blank"></span>');
+    document.getElementById('fill-sentence').innerHTML = display;
+    document.getElementById('fill-hint').textContent = `Türkçe anlamı: ${fillQ.tr}`;
+    const wrong = shuffle(words.filter(w => w.en !== fillQ.en)).slice(0, 3);
+    const opts = shuffle([fillQ, ...wrong]);
+    document.getElementById('fill-choices').innerHTML = opts.map(o =>
+      `<button class="choice-btn" onclick="checkFill(this,'${o.en}')">${o.en}</button>`
+    ).join('');
+  }
+
+  function checkFill(btn, en) {
+    document.querySelectorAll('#fill-choices .choice-btn').forEach(b => b.disabled = true);
+    if (en === fillQ.en) {
+      scoreCorrect++; btn.classList.add('correct-ans');
+    } else {
+      scoreWrong++; btn.classList.add('wrong-ans');
+      document.querySelectorAll('#fill-choices .choice-btn').forEach(b => {
+        if (b.textContent === fillQ.en) b.classList.add('correct-ans');
+      });
+    }
+    updateScore();
+    document.getElementById('fill-next').style.display = '';
+  }
+
+  /* ── Keyboard shortcuts ── */
+  document.getElementById('inp-en').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('inp-tr').focus(); });
+  document.getElementById('inp-tr').addEventListener('keydown', e => { if (e.key === 'Enter') addWord(); });
+
+  renderWordList();
+</script>
+</body>
+</html>
