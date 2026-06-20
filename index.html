@@ -9,25 +9,25 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #f5f5f3;
-      --surface: #ffffff;
-      --surface2: #f0efed;
-      --border: rgba(0,0,0,0.10);
-      --border2: rgba(0,0,0,0.18);
-      --text: #1a1a18;
-      --text2: #5c5c58;
-      --text3: #9a9a95;
-      --green: #639922;
-      --green-bg: #eaf3de;
-      --green-text: #3b6d11;
-      --red-bg: #fce8e8;
-      --red-text: #a32d2d;
-      --red-border: rgba(163,45,45,0.3);
-      --green-border: rgba(99,153,34,0.3);
-      --warn-bg: #faeeda;
-      --warn-text: #854f0b;
-      --info-bg: #e0f2fe;
-      --info-text: #0369a1;
+      --bg: #121212;
+      --surface: #1e1e1e;
+      --surface2: #2a2a2a;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.15);
+      --text: #e0e0e0;
+      --text2: #b0b0b0;
+      --text3: #757575;
+      --green: #7cb342;
+      --green-bg: #2e3d24;
+      --green-text: #aed581;
+      --red-bg: #4c2424;
+      --red-text: #e57373;
+      --red-border: rgba(229,115,115,0.3);
+      --green-border: rgba(174,213,129,0.3);
+      --warn-bg: #413520;
+      --warn-text: #ffe082;
+      --info-bg: #1a364a;
+      --info-text: #81d4fa;
       --radius: 8px;
       --radius-lg: 12px;
     }
@@ -55,7 +55,7 @@
       padding: 12px 18px;
       margin-bottom: 1.25rem;
     }
-    .score-bar .brand { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .score-bar .brand { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; color: #fff; }
     .score-pills { display: flex; gap: 8px; }
     .pill {
       font-size: 13px; font-weight: 500;
@@ -74,7 +74,7 @@
       display: none;
       background: var(--warn-bg);
       color: var(--warn-text);
-      border: 0.5px solid rgba(133,79,11,0.25);
+      border: 0.5px solid rgba(255,224,130,0.2);
     }
     .alert.show { display: block; }
 
@@ -102,23 +102,23 @@
       outline: none; transition: border-color .15s, box-shadow .15s;
     }
     input[type=text]::placeholder { color: var(--text3); }
-    input[type=text]:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(99,153,34,.15); }
+    input[type=text]:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(124,179,66,.15); }
 
     /* Buttons */
     .btn {
       cursor: pointer; padding: 9px 16px; font-size: 14px; font-weight: 500;
       border: 0.5px solid var(--border2); border-radius: var(--radius);
-      background: transparent; color: var(--text);
+      background: var(--surface2); color: var(--text);
       transition: all .15s; width: 100%;
       display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     }
-    .btn:hover { background: var(--surface2); }
+    .btn:hover { background: #333333; border-color: rgba(255,255,255,0.25); }
     .btn:active { transform: scale(.98); }
-    .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
+    .btn.primary { background: var(--green); border-color: var(--green); color: #121212; font-weight: 600; }
     .btn.primary:hover { background: var(--green-text); border-color: var(--green-text); }
-    .btn.danger-btn { border-color: var(--red-border); color: var(--red-text); }
+    .btn.danger-btn { border-color: var(--red-border); color: var(--red-text); background: rgba(229,115,115,0.05); }
     .btn.danger-btn:hover { background: var(--red-bg); }
-    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn:disabled { opacity: .3; cursor: not-allowed; }
 
     /* Game selector */
     .game-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
@@ -130,7 +130,7 @@
       padding: 9px 12px; background: var(--surface2);
       border-radius: var(--radius); border: 0.5px solid var(--border);
     }
-    .word-item .en { font-weight: 500; font-size: 14px; }
+    .word-item .en { font-weight: 500; font-size: 14px; color: #fff; }
     .word-item .sep { color: var(--text3); margin: 0 6px; }
     .word-item .tr-text { font-size: 14px; color: var(--text2); }
     .word-item .del-btn { padding: 4px 8px; width: auto; font-size: 13px; }
@@ -145,14 +145,15 @@
       background: none; border: none; padding: 0; margin-bottom: 1rem;
       transition: color .15s;
     }
-    .back-btn:hover { color: var(--text); }
+    .back-btn:hover { color: #fff; }
 
     /* Question card */
     .question-card {
       background: var(--surface2); border-radius: var(--radius-lg);
       padding: 1.5rem; margin-bottom: 1rem; text-align: center;
+      border: 0.5px solid var(--border);
     }
-    .question-en { font-size: 24px; font-weight: 500; margin-bottom: 4px; }
+    .question-en { font-size: 24px; font-weight: 500; margin-bottom: 4px; color: #fff; }
     .question-sub { font-size: 13px; color: var(--text2); }
 
     /* Word Guesser Layout Clues */
@@ -163,10 +164,10 @@
     .choice-btn {
       padding: 11px 16px; font-size: 14px; text-align: center;
       cursor: pointer; border: 0.5px solid var(--border2); border-radius: var(--radius);
-      background: transparent; color: var(--text);
+      background: var(--surface2); color: var(--text);
       transition: all .2s; width: 100%;
     }
-    .choice-btn:hover:not(:disabled) { background: var(--surface2); }
+    .choice-btn:hover:not(:disabled) { background: #333333; border-color: rgba(255,255,255,0.25); }
     .choice-btn:disabled { cursor: default; }
     .choice-btn.correct-ans { background: var(--green-bg) !important; border-color: var(--green-border) !important; color: var(--green-text) !important; }
     .choice-btn.wrong-ans   { background: var(--red-bg)   !important; border-color: var(--red-border)   !important; color: var(--red-text)   !important; }
@@ -178,9 +179,9 @@
     .match-btn {
       padding: 10px; font-size: 14px; text-align: center;
       cursor: pointer; border: 0.5px solid var(--border2); border-radius: var(--radius);
-      background: transparent; color: var(--text); transition: all .2s; width: 100%;
+      background: var(--surface2); color: var(--text); transition: all .2s; width: 100%;
     }
-    .match-btn:hover:not(:disabled) { background: var(--surface2); }
+    .match-btn:hover:not(:disabled) { background: #333333; border-color: rgba(255,255,255,0.25); }
     .match-btn.selected   { border-color: var(--green); background: var(--green-bg); color: var(--green-text); }
     .match-btn.matched     { opacity: 0; pointer-events: none; transition: opacity .4s; }
     .match-btn.wrong-flash { background: var(--red-bg); border-color: var(--red-border); color: var(--red-text); }
@@ -222,7 +223,6 @@
 
   <div id="alert-box" class="alert" role="alert"></div>
 
-  <!-- ── MAIN SCREEN ── -->
   <div id="main-screen">
     <div class="section">
       <div class="section-title"><i class="ti ti-plus" aria-hidden="true"></i> Kelime Ekle</div>
@@ -252,7 +252,6 @@
     </div>
   </div>
 
-  <!-- ── MATCH SCREEN ── -->
   <div id="match-screen" class="game-screen" aria-label="Eşleştirme Oyunu">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
     <div class="section" id="match-body">
@@ -271,7 +270,6 @@
     </div>
   </div>
 
-  <!-- ── QUIZ SCREEN ── -->
   <div id="quiz-screen" class="game-screen" aria-label="Çoktan Seçmeli Oyunu">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
     <div class="section" id="quiz-body">
@@ -290,7 +288,6 @@
     </div>
   </div>
 
-  <!-- ── GUESS SCREEN (HARF TAHMİN) ── -->
   <div id="guess-screen" class="game-screen" aria-label="Harf Tahmin Oyunu">
     <button class="back-btn" onclick="goBack()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Geri</button>
     <div class="section" id="guess-body">
@@ -326,9 +323,7 @@
     </div>
   </div>
 
-</div><!-- /app -->
-
-<script>
+</div><script>
   let words = JSON.parse(localStorage.getItem('myFlashcards')) || [];
   let scoreCorrect = parseInt(localStorage.getItem('scoreCorrect')) || 0;
   let scoreWrong = parseInt(localStorage.getItem('scoreWrong')) || 0;
