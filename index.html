@@ -9,25 +9,25 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #f5f5f3;
-      --surface: #ffffff;
-      --surface2: #f0efed;
-      --border: rgba(0,0,0,0.10);
-      --border2: rgba(0,0,0,0.18);
-      --text: #1a1a18;
-      --text2: #5c5c58;
-      --text3: #9a9a95;
+      --bg: #121214;
+      --surface: #1a1a1e;
+      --surface2: #26262b;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.15);
+      --text: #ececed;
+      --text2: #a1a1aa;
+      --text3: #6b6b72;
       --green: #639922;
-      --green-bg: #eaf3de;
-      --green-text: #3b6d11;
-      --red-bg: #fce8e8;
-      --red-text: #a32d2d;
-      --red-border: rgba(163,45,45,0.3);
-      --green-border: rgba(99,153,34,0.3);
-      --warn-bg: #faeeda;
-      --warn-text: #854f0b;
-      --info-bg: #e0f2fe;
-      --info-text: #0369a1;
+      --green-bg: rgba(99,153,34,0.15);
+      --green-text: #82c92f;
+      --red-bg: rgba(163,45,45,0.15);
+      --red-text: #f87171;
+      --red-border: rgba(248,113,113,0.3);
+      --green-border: rgba(130,201,47,0.3);
+      --warn-bg: rgba(133,79,11,0.2);
+      --warn-text: #fbbf24;
+      --info-bg: rgba(3,105,161,0.15);
+      --info-text: #38bdf8;
       --radius: 8px;
       --radius-lg: 12px;
     }
@@ -74,7 +74,7 @@
       display: none;
       background: var(--warn-bg);
       color: var(--warn-text);
-      border: 0.5px solid rgba(133,79,11,0.25);
+      border: 0.5px solid rgba(251,191,36,0.2);
     }
     .alert.show { display: block; }
 
@@ -102,15 +102,16 @@
       outline: none; transition: border-color .15s, box-shadow .15s;
     }
     input[type=text]::placeholder { color: var(--text3); }
-    input[type=text]:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(99,153,34,.15); }
+    input[type=text]:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(99,153,34,.25); }
 
     /* Sync Box */
     .sync-box {
-      margin-top: 12px; padding: 10px;
+      margin-top: 14px; padding: 12px;
       background: var(--info-bg); color: var(--info-text);
       border-radius: var(--radius); font-size: 13px;
+      border: 0.5px solid rgba(56,189,248,0.2);
     }
-    .sync-row { display: flex; gap: 6px; margin-top: 6px; }
+    .sync-row { display: flex; gap: 8px; margin-top: 8px; }
 
     /* Buttons */
     .btn {
@@ -244,8 +245,8 @@
       <div class="sync-box">
         <i class="ti ti-device-mobile" aria-hidden="true"></i> <strong>Telefona Aktarma Linki:</strong>
         <div class="sync-row">
-          <input type="text" id="share-url-input" readonly onclick="this.select()" style="font-size:12px; padding:6px;" />
-          <button class="btn" style="width:auto; padding:0 12px; font-size:12px; background:#fff;" onclick="copyShareUrl()">Kopyala</button>
+          <input type="text" id="share-url-input" readonly onclick="this.select()" style="font-size:12px; padding:6px; background: rgba(0,0,0,0.2);" />
+          <button class="btn" style="width:auto; padding:0 12px; font-size:12px; background: var(--surface2); color: var(--text);" onclick="copyShareUrl()">Kopyala</button>
         </div>
       </div>
 
@@ -342,12 +343,10 @@
 </div><script>
   let words = [];
 
-  // Sayfa ilk açıldığında: Önce URL'de kelime var mı diye bakar, yoksa eski yerel verileri çeker.
   function loadWords() {
     const hash = window.location.hash.substring(1);
     if (hash) {
       try {
-        // Base64 şifrelenmiş linki çöz ve kelimeleri yükle
         const decoded = decodeURIComponent(atob(hash));
         words = JSON.parse(decoded);
         localStorage.setItem('myFlashcards', JSON.stringify(words));
@@ -371,13 +370,11 @@
       document.getElementById('share-url-input').value = "Henüz kelime yok...";
       return;
     }
-    // Kelimeleri tek bir URL hash kodu haline getir (Base64)
     const jsonStr = JSON.stringify(words);
     const b64 = btoa(encodeURIComponent(jsonStr));
     const fullUrl = window.location.origin + window.location.pathname + '#' + b64;
     document.getElementById('share-url-input').value = fullUrl;
     
-    // Geçerli URL'i de temizce günceller (sayfa yenilenmeden)
     window.history.replaceState(null, null, '#' + b64);
   }
 
@@ -403,7 +400,6 @@
 
   let currentRevealedArray = []; 
 
-  // İlk yükleme tetiklemesi
   loadWords();
   updateScore();
 
@@ -486,7 +482,7 @@
     if (mode === 'guess') initGuess();
   }
 
-  /* ── MATCH (EŞLEŞTİRME) ── */
+  /* ── MATCH ── */
   function resetMatchUI() {
     document.getElementById('match-body').innerHTML = `
       <div class="section-title"><i class="ti ti-arrows-shuffle" aria-hidden="true"></i> Eşleştirme Oyunu</div>
@@ -514,14 +510,10 @@
     }
 
     resetMatchUI();
-
     matchPairs = unplayedMatchWords.splice(0, Math.min(10, unplayedMatchWords.length));
-    
-    matchEnSel = null; 
-    matchTrSel = null;
+    matchEnSel = null; matchTrSel = null;
     
     const trShuffled = shuffle(matchPairs);
-    
     document.getElementById('match-progress').textContent = `Bu tur: ${matchPairs.length} çift | Kalan Havuz: ${unplayedMatchWords.length + matchPairs.length}`;
     
     document.getElementById('match-en').innerHTML = matchPairs.map((w, i) =>
@@ -554,10 +546,7 @@
       
       const remaining = document.querySelectorAll('.match-btn:not(.matched)').length;
       if (remaining === 0) {
-        setTimeout(() => { 
-          showAlert('🎉 Tur tamamlandı! Yeni kelimeler getiriliyor...'); 
-          initMatch(); 
-        }, 600);
+        setTimeout(() => { showAlert('🎉 Tur tamamlandı! Yeni kelimeler getiriliyor...'); initMatch(); }, 600);
       }
     } else {
       scoreWrong++; updateScore();
@@ -631,7 +620,7 @@
     document.getElementById('quiz-next').style.display = '';
   }
 
-  /* ── HARF TAHMİN (GUESS) ── */
+  /* ── GUESS ── */
   function initGuess() {
     document.getElementById('guess-screen').classList.add('active');
     activeGuessWords = shuffle(words);
@@ -720,7 +709,6 @@
     for (let i = 0; i < currentRevealedArray.length; i++) {
       if (currentRevealedArray[i] === '_') hiddenIndices.push(i);
     }
-    
     if (hiddenIndices.length > 0) {
       let randIdx = hiddenIndices[Math.floor(Math.random() * hiddenIndices.length)];
       currentRevealedArray[randIdx] = guessQ.tr[randIdx];
@@ -735,10 +723,8 @@
     if (!userAns) { showAlert('Lütfen bir tahmin yazın!'); return; }
 
     if (userAns === targetAns) {
-      scoreCorrect++;
-      updateScore();
-      
-      document.getElementById('guess-clue-display').style.color = 'var(--green)';
+      scoreCorrect++; updateScore();
+      document.getElementById('guess-clue-display').style.color = 'var(--green-text)';
       document.getElementById('guess-clue-display').textContent = guessQ.tr;
       
       document.getElementById('inp-guess-answer').disabled = true;
@@ -747,8 +733,7 @@
       document.getElementById('btn-guess-submit').disabled = true;
       document.getElementById('guess-next').style.display = '';
       document.getElementById('guess-next').focus();
-    } 
-    else {
+    } else {
       showAlert('❌ Yanlış Cevap! Tekrar deneyin.');
       document.getElementById('guess-clue-display').style.color = 'var(--red-text)';
       document.getElementById('inp-guess-answer').value = '';
@@ -757,9 +742,7 @@
   }
 
   function giveUpAndShowAnswer() {
-    scoreWrong++;
-    updateScore();
-
+    scoreWrong++; updateScore();
     document.getElementById('guess-clue-display').style.color = 'var(--red-text)';
     document.getElementById('guess-clue-display').textContent = `Doğru Cevap: ${guessQ.tr}`;
 
@@ -772,7 +755,6 @@
     document.getElementById('guess-next').focus();
   }
 
-  /* ── BİTİŞ EKRANI ── */
   function showEndScreen(containerId, retryFunction) {
     const container = document.getElementById(containerId);
     container.innerHTML = `
@@ -787,7 +769,6 @@
     `;
   }
 
-  /* ── Klavye Kısayolları ── */
   document.getElementById('inp-en').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('inp-tr').focus(); });
   document.getElementById('inp-tr').addEventListener('keydown', e => { if (e.key === 'Enter') addWord(); });
 
