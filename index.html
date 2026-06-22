@@ -378,15 +378,30 @@
     window.history.replaceState(null, null, '#' + b64);
   }
 
-  function copyShareUrl() {
-    const input = document.getElementById('share-url-input');
-    if (words.length === 0) return;
-    input.select();
-    input.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(input.value);
-    showAlert('📋 Paylaşım linki kopyalandı! Telefona gönderebilirsin.');
+  async function copyShareUrl() {
+  const input = document.getElementById('share-url-input');
+  if (words.length === 0) return;
+  
+  const longUrl = input.value;
+  
+  try {
+    // Ücretsiz ve üyeliksiz TinyURL API'sini kullanarak linki kısaltıyoruz
+    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
+    if (res.ok) {
+      const shortUrl = await res.text();
+      navigator.clipboard.writeText(shortUrl);
+      showAlert('📋 Kısaltılmış link kopyalandı! Telefona gönderebilirsin.');
+      return;
+    }
+  } catch (e) {
+    console.log("Kısaltma yapılamadı, uzun linke dönülüyor...", e);
   }
 
+  // Eğer o an internet yoksa veya API çalışmazsa mecburen uzun linki kopyalar
+  input.select();
+  navigator.clipboard.writeText(longUrl);
+  showAlert('📋 Link kopyalandı! (Not: İnternet hatası nedeniyle uzun link kopyalandı)');
+}
   let scoreCorrect = parseInt(localStorage.getItem('scoreCorrect')) || 0;
   let scoreWrong = parseInt(localStorage.getItem('scoreWrong')) || 0;
 
